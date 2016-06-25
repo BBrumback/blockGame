@@ -151,7 +151,7 @@ function updateGameArea() {
     //This checks if there is been a collision and ends the game
     for (i = 0; i < myObstacles.length; i += 1) {
         if (myGamePiece.crashWith(myObstacles[i])) {
-            //return;
+            return;
         }
     }
  
