@@ -1,0 +1,261 @@
+<DOCTYPE! html>
+<html>
+<head>
+<style>
+#container {
+  width: 1000px;
+  height: 700px;
+  position: fixed;
+  background: yellow;
+}
+#animate {
+  width: 50px;
+  height: 50px;
+  position: fixed;
+  background-color: green;
+}
+p {
+  width: 50px;
+  height: 50px;
+  position: fixed;
+  background-color: red;
+}
+ 
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+}
+</style>
+<title>The Intern Game</title>
+</head>
+<body onload="startGame()">
+ 
+<div id="demo">test space</div>
+ 
+ 
+<script type ="text/javaScript">
+ 
+var myGamePiece;
+var myObstacles = [];
+var myScore;
+var spawnSpeed = 150;
+var level = 1;
+var velModifer = 1;
+var score = 0;
+ 
+ 
+function startGame() {
+    myGamePiece = new component(40, 40, "green", 120, 120, 0, 0);
+    //myScore = new component("30px", "Consolas", "black", 280, 40, "text");
+    myGameArea.start();
+}
+ 
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 1000;
+        this.canvas.height = 700;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(updateGameArea, 20);
+        this.canvas.style.cursor = "none";
+        window.addEventListener('mousemove', function (e) {
+            myGameArea.x = e.pageX;
+            myGameArea.y = e.pageY;
+        })
+    },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+}
+ 
+function component(width, height, color, x, y, speedX, speedY, wiggle) {
+   // this.type = type;
+    this.age = 0;
+	this.score = 0;
+    this.width = width;
+    this.height = height;
+    this.speedX1 = speedX;
+	this.speedX2 = 0;
+    this.speedY1 = speedY;
+	this.speedY2 = 0;
+    this.x = x;
+    this.y = y;
+	this.wiggle = wiggle;
+	this.wiggleAmp = Math.random()*velModifer + 1;
+    this.gravity = 0;
+    this.gravitySpeed = 0;
+ 
+	this.theta = Math.atan2(speedY, speedX);
+ 
+                //This looks likethe game loop type of thing
+    this.update = function() {
+        ctx = myGameArea.context;
+ 
+                //THis is for score keeping
+       // if (this.type == "text") {
+           // ctx.font = this.width + " " + this.height;
+           // ctx.fillStyle = color;
+           // ctx.fillText(this.text, this.x, this.y);
+        //THis is for displaying solid game objects
+                //} else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+       // }
+    }
+ 
+                //the gravity method for moving
+    this.newPos = function() {
+        this.x += speedX;
+                this.y += speedY;
+    }
+ 
+                //Collision detection
+    this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+            crash = false;
+        }
+        return crash;
+    }
+	
+	this.isOnScreen = function(){
+		var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = 0;
+        var otherright = (myGameArea.canvas.width);
+        var othertop = 0;
+        var otherbottom = (myGameArea.canvas.height);
+        var isOnScreen = false;
+        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+            isOnScreen = true;
+        }
+        return isOnScreen;
+	}
+}
+ 
+function updateGameArea() {
+    var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+   
+    //This checks if there is been a collision and ends the game
+    for (i = 0; i < myObstacles.length; i += 1) {
+        if (myGamePiece.crashWith(myObstacles[i])) {
+            //return;
+        }
+    }
+ 
+    //This resets the screen
+    myGameArea.clear();
+ 
+    //This creates a new obstical every 150 frames
+    myGameArea.frameNo += 1;
+	score++;
+	console.log(spawnSpeed);
+	if(spawnSpeed == 0){
+			level++;
+			spawnSpeed = 150;
+			velModifer = 1;
+			console.log("Next level");
+	}
+    if (everyinterval(spawnSpeed)) {
+		
+		if(spawnSpeed > 100/velModifer){
+			spawnSpeed += -4;
+		} else {
+			//TODO: this can cause the spawn rate to go to zero
+			//make levels
+			velModifer += .5;
+			spawnSpeed = 120 - (10 * velModifer);
+		}
+
+		var location = Math.round(Math.random() * 3);
+		var x;
+		var y;
+	   
+		if(location == 0){
+						x = 20 + Math.random() * (myGameArea.canvas.width - 20);
+						y = -50;
+		} else if(location == 1){
+						x = -50;
+						y = 20 + Math.random() * (myGameArea.canvas.height - 20);
+		} else if(location == 2){
+						x = myGameArea.canvas.width;
+						y = 20 + Math.random() * (myGameArea.canvas.height - 20);
+		} else if(location == 3){
+						x = 20 + Math.random() * (myGameArea.canvas.width - 20);
+						y = myGameArea.canvas.height;
+		}
+
+		var vectorLength = Math.sqrt(Math.pow(myGameArea.x - x, 2) + Math.pow(myGameArea.y - y, 2))
+		var velX = velModifer * (myGameArea.x - x)/vectorLength;
+		var velY = velModifer * (myGameArea.y - y)/vectorLength;
+		var color = "red";
+		var isWiggle = false;
+		if(Math.random() > .5 && level > 1){
+			color = "blue";
+			isWiggle = true;
+		}
+		
+		myObstacles.push(new component(50, 50, color, x, y, velX, velY, isWiggle));
+    }
+ 
+
+	
+	
+	//This moves obsticals to the left
+    for (i = 0; i < myObstacles.length; i++) {
+        
+		
+		var obj = myObstacles[i];
+		obj.age++;
+		
+		if(obj.wiggle){
+			obj.speedX2 = Math.sin(velModifer * obj.age/50) * Math.sin(obj.theta) * obj.wiggleAmp;
+			obj.speedY2 = -Math.sin(velModifer * obj.age/50) * Math.cos(obj.theta) * obj.wiggleAmp;
+		}
+		
+		obj.x += obj.speedX1 + obj.speedX2;
+        obj.y += obj.speedY1 + obj.speedY2;
+
+		
+		obj.update();
+		if(obj.isOnScreen() && i == 0){
+			myObstacles.shift();
+		}
+		
+    }
+
+	
+    if (myGameArea.x && myGameArea.y) {
+        myGamePiece.x = myGameArea.x;
+        myGamePiece.y = myGameArea.y;
+    }
+    myGamePiece.newPos();
+    myGamePiece.update();
+	document.getElementById("demo").innerHTML = "Score: " + Math.floor(score/10) + " Level: " + level;;
+ 
+    //This keeps the player up to date
+    myGamePiece.newPos();
+    myGamePiece.update();
+}
+ 
+function everyinterval(n) {
+    if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+    return false;
+}
+ 
+</script>
+ 
+</body>
+</html>
